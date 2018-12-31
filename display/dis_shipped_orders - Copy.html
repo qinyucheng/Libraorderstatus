@@ -1,0 +1,361 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+
+<head>
+    <title>No shipped Orders</title>
+
+</head>
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+
+
+
+<style>
+    table {
+
+        font-size: 14px;
+
+    }
+	#infoDiv {
+  font-size: 20px;
+ }
+ 
+ 
+ body { font-family: 'helvetica'; }
+#contain {
+  height: 800px;
+  overflow-y: scroll;
+}
+#table_scroll {
+  width: 100%;
+  margin-top: 100px;
+  margin-bottom: 100px;
+  border-collapse: collapse;
+}
+#table_scroll thead th {
+  padding: 10px;
+  background-color: #ea922c;
+  color: #fff;
+}
+#table_scroll tbody td {
+  padding: 10px;
+  background-color: #ed3a86;
+  color: #fff;
+}
+</style>
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
+<body>
+    <div id='infoDiv'><span id='spTime'></span>   shipped orders: <span id='spNum'></span> Office Scaned <span id='spOSNum'></span> Warehouse Scaned <span id='spWSNum'></span>
+        <div  id="contain">
+            <table width="100%" class="display" align="center" id='mainTable'>
+
+            </table>
+            <script>
+		 
+                $(document).ready(function() {
+					 pageScroll();
+  $("#contain").mouseover(function() {
+    clearTimeout(my_time);
+  }).mouseout(function() {
+    pageScroll();
+  });
+
+                });
+		
+ 
+                var ajax_call = function() {
+                    $.ajax({
+                        url: 'teapplix_ShippedOrder_api.php',
+                        type: 'post',
+
+                        success: function(output) {
+
+                            listArr = jQuery.parseJSON(output);
+                            if (listArr.status == 'shiped_done') {
+                                getShippedOrders();
+                            }
+
+
+
+                        }
+                    });
+                };
+
+                var interval = 1000 * 60 * 60; // where X is your every X minutes
+                //ajax_call();
+                setInterval(ajax_call, interval);
+                getShippedOrders();
+
+
+                function getShippedOrders() {
+                    $.ajax({
+                        url: 'ShippedOrder.php',
+                        type: 'post',
+
+                        success: function(output) {
+                            listArr = jQuery.parseJSON(output);
+                            var newArr = formatData(listArr);
+                            displayToTable(newArr)
+                            var Num = listArr.length;
+                            $("#spNum").text(Num);
+                            today();
+
+
+                        }
+                    });
+
+
+                }
+
+                function formatData(data) {
+                    var displayArr = [];
+					var officeScanedNum=0;
+					var warehouseScanedNum=0;
+                    for (var i in data) {
+                        var TempObj = {};
+                        var TxnId = data[i].TxnId;
+                        var StoreType = data[i].StoreType;
+
+                        var PaymentDate = data[i].PaymentDate;
+                        var PaymentStatus = data[i].PaymentStatus;
+
+                        var OrderItems = jQuery.parseJSON(data[i].OrderItems);
+
+                        var Description = OrderItems[0].Description;
+                        var Name = OrderItems[0].Name;
+
+
+                        var Quantity = OrderItems[0].Quantity;
+                        var Amount = OrderItems[0].Amount;
+                        var Buyer = jQuery.parseJSON(data[i].ToJson);
+                        var Buyer_Name = Buyer.Name;
+                        var Buyer_Street = Buyer.Street;
+                        var Buyer_Street2 = Buyer.Street2;
+                        var Buyer_State = Buyer.State;
+                        var Buyer_City = Buyer.City;
+                        var Buyer_PhoneNumber = Buyer.PhoneNumber;
+                        var Buyer_Email = Buyer.Email;
+                        var Buyer_ZipCode = Buyer.ZipCode;
+                        var Buyer_ZipCode = Buyer.ZipCode;
+						var ShipClass=data[i].ShipClass;
+						var ShipDate=data[i].ShipDate;
+						var ShipMethod=data[i].ShipMethod;
+						var TrackingNumber=data[i].TrackingNumber;
+						var TrackingStatus=data[i].TrackingStatus;
+						var TrackingSummary=data[i].TrackingSummary;
+						
+						if(TrackingNumber=='')
+						{
+							 var TrackingHtmlString = "No Tracking Number";
+						}else
+						{
+							 if(TrackingStatus=='')
+							{
+								 var TrackingHtmlString = TrackingNumber + "<br>The update time will be 10am and 3pm per day.";
+							}else
+							{
+								var TrackingHtmlString = TrackingNumber + "<br>"+ TrackingSummary;
+								/*
+								if(TrackingStatus=='Error')
+								{
+									var TrackingHtmlString = TrackingNumber + "<br>"+ TrackingSummary;
+								}
+								else
+								{
+									var TrackingHtmlString = TrackingNumber + "<br>" + TrackingStatus + "<br>" + TrackingSummary;
+								}*/
+							 
+							}
+						}
+						
+						
+						var offficeScanStatus=data[i].offficeScanStatus;
+						
+						
+						var warehouseStatus=data[i].warehouseStatus;
+						if(offficeScanStatus=='true')
+						{
+							officeScanedNum++;
+							offficeScanStatus='Scanned';
+							var officeScanTime=data[i].officeScanTime;
+							var offficeScanner=data[i].offficeScanner;
+							 var offficeScanHtmlString = offficeScanStatus + "<br>" + offficeScanner + "<br>" + officeScanTime;
+						}
+						else
+						{
+							offficeScanStatus='Not Scanned Yet';
+							 var offficeScanHtmlString = offficeScanStatus;
+						}
+						if(warehouseStatus=='true')
+						{
+							warehouseScanedNum++;
+							warehouseStatus='Scanned';
+							var warehouseScanTime=data[i].warehouseScanTime;
+							var warehouseScanner=data[i].warehouseScanner;
+							 var warehouseScanHtmlString = warehouseStatus + "<br>" + warehouseScanner + "<br>" + warehouseScanTime;
+						}
+						else
+						{
+							warehouseStatus='Not Scanned Yet';
+							 var warehouseScanHtmlString = warehouseStatus;
+						}
+						
+						
+						
+
+
+
+
+                        var ShippingHtmlString = ShipClass + "<br>" + ShipDate + "<br>" + ShipMethod;
+                       
+						
+                        var OrderHtmlString = TxnId + "<br>" + Description + "<br>" + Name + "<br>" + StoreType;
+						
+
+                        var PaymentHtmlString = PaymentDate + "<br>" + Buyer_Email + "<br>" + Amount + " " + PaymentStatus;
+                        if (Buyer_Street2 != '') {
+                            var BuyerHtmlString = Buyer_Name + "<br>" + Buyer_Street + "<br>" + Buyer_Street2 + "<br>" + Buyer_State + "<br>" + Buyer_City + Buyer_ZipCode + "<br>" + Buyer_PhoneNumber;
+                        } else
+
+                        {
+                            var BuyerHtmlString = Buyer_Name + "<br>" + Buyer_Street + "<br>" + Buyer_State + "<br>" + Buyer_City + Buyer_ZipCode + "<br>" + Buyer_PhoneNumber;
+                        }
+
+                        TempObj.Order = OrderHtmlString;
+                        TempObj.Payment = PaymentHtmlString;
+                        TempObj.Buyer = BuyerHtmlString;
+						TempObj.Shipping = ShippingHtmlString;
+                        TempObj.Tracking  = TrackingHtmlString;
+                       
+                        TempObj.Office = offficeScanHtmlString;
+                        TempObj.Warehouse = warehouseScanHtmlString;
+                        displayArr.push(TempObj);
+
+                    }
+					$("#spOSNum").text(officeScanedNum);
+					$("#spWSNum").text(warehouseScanedNum);
+                    return displayArr;
+
+
+                }
+
+                function displayToTable(data) {
+                    // loadingLayer();
+
+                    var table = $('#mainTable').DataTable({
+                        scrollY: 1000,
+                        searching: false,
+                        scrollCollapse: true,
+                        paging: true,
+                        info: false,
+                        "bPaginate": false,
+                        "bLengthChange": false,
+                        "bFilter": true,
+                        "bInfo": false,
+                        "bAutoWidth": false,
+                        "pageLength": 8,
+
+                        data: data,
+
+                        "columns": [{
+                                "title": "Order",
+                                "data": "Order"
+                            },
+                            {
+                                "title": "Payment",
+                                "data": "Payment"
+                            },
+
+                            {
+                                "title": "Buyer",
+                                "data": "Buyer"
+
+                            }, {
+                                "title": "Shipping",
+                                "data": "Shipping"
+
+                            }, {
+                                "title": "Tracking",
+                                "data": "Tracking"
+
+                            }, {
+                                "title": "Office",
+                                "data": "Office"
+
+                            },
+							{
+                                "title": "Warehouse",
+                                "data": "Warehouse"
+
+                            },
+
+                        ],
+
+
+
+                    });
+					   /*
+							setInterval(function(){ 
+							   var info = table.page.info();
+							   var pageNum = (info.page < info.pages) ? info.page + 1 : 1;
+							   table.page(pageNum).draw(false);    
+							}, 10000); 
+						*/
+
+                }
+
+                function today() {
+
+                    var today = new Date();
+                    var dd = today.getDate();
+                    var mm = today.getMonth() + 1; //January is 0!
+
+                    var yyyy = today.getFullYear();
+                    if (dd < 10) {
+                        dd = '0' + dd;
+                    }
+                    if (mm < 10) {
+                        mm = '0' + mm;
+                    }
+                    var today = mm + '/' + dd + '/' + yyyy;
+
+                    formatAMPM(today)
+                }
+
+                function formatAMPM(today) {
+                    var date = new Date();
+                    var hours = date.getHours();
+                    var minutes = date.getMinutes();
+                    var ampm = hours >= 12 ? 'pm' : 'am';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12; // the hour '0' should be '12'
+                    minutes = minutes < 10 ? '0' + minutes : minutes;
+                    var strTime = hours + ':' + minutes + ' ' + ampm;
+                    $("#spTime").text(today + ' : ' + strTime);
+                }
+                var layerIndex;
+
+                function loadingLayer() {
+                    layerIndex = layer.load(1, {
+                        shade: [0.3, '#fff']
+                    });
+
+                }
+				
+				
+				function pageScroll() {  
+	var objDiv = document.getElementById("contain");
+  objDiv.scrollTop = objDiv.scrollTop + 1;  
+  $('p:nth-of-type(1)').html('scrollTop : '+ objDiv.scrollTop);
+  $('p:nth-of-type(2)').html('scrollHeight : ' + objDiv.scrollHeight);
+  if (objDiv.scrollTop == (objDiv.scrollHeight - 100)) {
+    objDiv.scrollTop = 0;
+  }
+  my_time = setTimeout('pageScroll()', 25);
+}
+            </script>
+</body>
+
+</html>

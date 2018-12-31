@@ -1,0 +1,571 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+
+<head>
+    <title>shipped Orders</title>
+
+</head>
+
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap.min.css" />
+<style>
+
+</style>
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap.min.js"></script>
+
+
+<body>
+    <div id='infoDiv'><span id='spTime'></span> Open Orders: <span id='spooNum'></span> No Moving Orders: <span id='spnmNum'></span><br>Total Orders: <span id='spNum'></span> Total Office Not Scanned: <span id='spOSNum'></span> Total Warehouse Not Scanned: <span id='spWSNum'></span></br> Today Orders: <span id='spTodayTotalNum'></span> Today Office Not Scanned: <span id='spTodayOSNum'></span> Today Warehouse Not Scanned: <span id='spTodayWSNum'></span></div><br>
+
+    <div id="contain">
+        <!--table width="100%" id='mainTable'>
+
+            </table-->
+        <div>
+            <script>
+                var height = $(window).height();
+                var setHeigth = ($(window).height() - 150);
+                $(document).ready(function() {
+				$('a[data-toggle="tab"]').on( 'shown.bs.tab', function (e) {
+						$.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
+					} );
+				getNoShippedOrders();
+
+
+                });
+
+               
+                function getNoShippedOrders() {
+                    $.ajax({
+                        url: 'notshipped_orders.php',
+                        type: 'post',
+
+                        success: function(output) {
+                            listArr = jQuery.parseJSON(output);
+                            var T_UpdateTime = listArr[0].T_UpdateTime;
+                            var newArr = formatData_NoShipped(listArr);
+                            getShippedOrders(newArr);
+
+                            var Num = newArr.length;
+                            $("#spooNum").text(Num);
+
+                        }
+                    });
+
+
+                }
+
+                function formatData_NoShipped(data) {
+                    var displayArr = [];
+                    var officeScanedNum = 0;
+                    var warehouseScanedNum = 0;
+
+                    for (var i in data) {
+                        var TempObj = {};
+                        var TxnId = data[i].TxnId;
+                        var StoreType = data[i].StoreType;
+                        var PaymentDate = data[i].PaymentDate;
+                        var PaymentStatus = data[i].PaymentStatus;
+                        var OrderItems = jQuery.parseJSON(data[i].OrderItems);
+                        var Description = OrderItems[0].Description;
+                        var Name = OrderItems[0].Name;
+                        var Quantity = OrderItems[0].Quantity;
+                        var Amount = OrderItems[0].Amount;
+                        var Buyer = jQuery.parseJSON(data[i].ToJson);
+                        var Buyer_Name = Buyer.Name;
+                        var Buyer_Street = Buyer.Street;
+                        var Buyer_Street2 = Buyer.Street2;
+                        var Buyer_State = Buyer.State;
+                        var Buyer_City = Buyer.City;
+                        var Buyer_PhoneNumber = Buyer.PhoneNumber;
+                        var Buyer_Email = Buyer.Email;
+                        var Buyer_ZipCode = Buyer.ZipCode;
+                        var Buyer_ZipCode = Buyer.ZipCode;
+                        var ShipClass = data[i].ShipClass;
+                        var ShipDate = data[i].ShipDate;
+                        var ShipMethod = data[i].ShipMethod;
+                        var TrackingNumber = data[i].TrackingNumber;
+                        var TrackingStatus = data[i].TrackingStatus;
+                        var TrackingSummary = data[i].TrackingSummary;
+						
+							 if (ShipClass.indexOf("PRIME") >= 0) {
+                            var date = new Date();
+                            var hours = date.getHours();
+                            var minutes = date.getMinutes();
+                            if (hours >= 15) {
+                                var ShippingHtmlString = "<span style='background-color:red;color:white'>" + ShipClass + "</span>";
+                            } else {
+                                var ShippingHtmlString = "<span style='background-color:blue;color:white'>" + ShipClass + "</span>";
+                            }
+
+
+
+
+                        } else {
+                            var ShippingHtmlString = ShipClass;
+                        }
+
+
+                        var OrderHtmlString = TxnId + "<br>" + Description + "<br>" + Name + "<br>" + StoreType;
+
+
+                        var PaymentHtmlString = PaymentDate + "<br>" + Buyer_Email + "<br>" + Amount + " " + PaymentStatus;
+                        if (Buyer_Street2 != '') {
+                            var BuyerHtmlString = Buyer_Name + "<br>" + Buyer_Street + "<br>" + Buyer_Street2 + "<br>" + Buyer_State + "<br>" + Buyer_City + Buyer_ZipCode + "<br>" + Buyer_PhoneNumber;
+                        } else
+
+                        {
+                            var BuyerHtmlString = Buyer_Name + "<br>" + Buyer_Street + "<br>" + Buyer_State + "<br>" + Buyer_City + Buyer_ZipCode + "<br>" + Buyer_PhoneNumber;
+                        }
+                        var isToday = checkItToday(ShipDate);
+
+
+                        TempObj.Order = OrderHtmlString;
+                        TempObj.Payment = PaymentHtmlString;
+                        TempObj.Buyer = BuyerHtmlString;
+                        TempObj.Shipping = ShippingHtmlString;
+                        TempObj.Tracking = '';
+                        TempObj.Office = '';
+                        TempObj.Warehouse = '';
+                        TempObj.isToday = -1;
+
+                        displayArr.push(TempObj);
+
+                    }
+
+                    return displayArr;
+
+
+                }
+
+
+                function getShippedOrders(NoShipped_data) {
+                    $.ajax({
+                        url: 'ShippedOrder.php',
+                        type: 'post',
+
+                        success: function(output) {
+                            listArr = jQuery.parseJSON(output);
+                            var newArr = formatData(listArr, NoShipped_data);
+                            displayToTable(newArr)
+                            //var Num = newArr.length;
+
+                            var T_UpdateTime = listArr[0].T_UpdateTime;
+                            $("#spTime").text(T_UpdateTime);
+                            today();
+
+
+                        }
+                    });
+
+
+                }
+
+                function formatData(data, NoShipped_data) {
+                    var displayArr = [];
+                    var officeScanedNum = 0;
+                    var officeUnScanedNum = 0;
+                    var officeTodayUnScanedNum = 0;
+                    var warehouseScanedNum = 0;
+                    var warehouseUnScanedNum = 0;
+                    var warehouseTodayUnScanedNum = 0;
+                    var todayUnScanedNum = 0;
+                    var NoMovingOrderNum = 0;
+                    for (var i in data) {
+                        var TempObj = {};
+                        var TxnId = data[i].TxnId;
+                        var StoreType = data[i].StoreType;
+                        var PaymentDate = data[i].PaymentDate;
+                        var PaymentStatus = data[i].PaymentStatus;
+                        var OrderItems = jQuery.parseJSON(data[i].OrderItems);
+                        var Description = OrderItems[0].Description;
+                        var Name = OrderItems[0].Name;
+                        var Quantity = OrderItems[0].Quantity;
+                        var Amount = OrderItems[0].Amount;
+                        var Buyer = jQuery.parseJSON(data[i].ToJson);
+                        var Buyer_Name = Buyer.Name;
+                        var Buyer_Street = Buyer.Street;
+                        var Buyer_Street2 = Buyer.Street2;
+                        var Buyer_State = Buyer.State;
+                        var Buyer_City = Buyer.City;
+                        var Buyer_PhoneNumber = Buyer.PhoneNumber;
+                        var Buyer_Email = Buyer.Email;
+                        var Buyer_ZipCode = Buyer.ZipCode;
+                        var Buyer_ZipCode = Buyer.ZipCode;
+                        var ShipClass = data[i].ShipClass;
+                        var ShipDate = data[i].ShipDate;
+                        var ShipMethod = data[i].ShipMethod;
+                        var TrackingNumber = data[i].TrackingNumber;
+                        var TrackingStatus = data[i].TrackingStatus;
+                        var TrackingSummary = data[i].TrackingSummary;
+						if(ShipMethod!==undefined)
+						{
+							var ShipMethod2=ShipMethod.toLowerCase();
+							if(ShipMethod2.indexOf("usps") >= 0)
+								{
+									TrackingNumber="<a href='https://tools.usps.com/go/TrackConfirmAction?tLabels="+TrackingNumber+"' target='_blank'>"+TrackingNumber+"</a>";
+								}
+								else if(ShipMethod2.indexOf("fedex") >= 0)
+								{
+									TrackingNumber="<a href='https://www.fedex.com/apps/fedextrack/?action=track&tracknumbers="+TrackingNumber+"' target='_blank'>"+TrackingNumber+"</a>";
+								}
+								else
+								{
+									TrackingNumber = '';
+								}
+
+							if (ShipClass.indexOf("PRIME") >= 0) {
+								var date = new Date();
+								var hours = date.getHours();
+								var minutes = date.getMinutes();
+								if (hours >= 15) {
+									var ShippingHtmlString = "<span style='background-color:red;color:white'>" + ShipClass + "</span>";
+								} else {
+									var ShippingHtmlString = "<span style='background-color:blue;color:white'>" + ShipClass + "</span>";
+								}
+
+
+
+
+							} else {
+								var ShippingHtmlString = ShipClass;
+							}
+							
+							}
+							else {
+								var ShippingHtmlString = ShipClass;
+							}
+                        if (TrackingNumber == '') {
+                            var TrackingHtmlString = "<span style='background-color:red;color:white'>No Tracking Number</span>";
+                        } else {
+                            if (TrackingStatus == '') {
+                                var TrackingHtmlString = TrackingNumber + "<br><span style='background-color:#CB33FF ;color:white'>Not Update Yet</span>";
+                                //var TrackingHtmlString = TrackingNumber + "<br>The update time will be 10am and 3pm per day.";
+                            } else {
+                                if (TrackingSummary.indexOf("not in system") >= 0) {
+                                    var TrackingHtmlString = TrackingNumber + "<br> <span style='background-color:red;color:white'>No Shipping label</span>";
+                                } else {
+                                    var TrackingHtmlString = TrackingNumber + "<br>" + TrackingSummary;
+                                }
+
+                            }
+                        }
+
+                        var isToday = checkItToday(ShipDate);
+                        var isToday2 = calcDate(ShipDate);
+
+                        var offficeScanStatus = data[i].offficeScanStatus;
+                        var offficeScanStatus2 = data[i].offficeScanStatus;
+
+
+                        var warehouseStatus = data[i].warehouseStatus;
+                        var warehouseStatus2 = data[i].warehouseStatus;
+                        if (offficeScanStatus == 'true') {
+                            officeScanedNum++;
+                            offficeScanStatus = 'Scanned';
+                            var officeScanTime = data[i].officeScanTime;
+                            var offficeScanner = data[i].offficeScanner;
+                            var offficeScanHtmlString = offficeScanStatus + "<br>" + offficeScanner + "<br>" + officeScanTime;
+                        } else {
+                            officeUnScanedNum++;
+                            offficeScanStatus = "<span style='background-color:red;color:white'>Not Scanned Yet</span>";
+                            var offficeScanHtmlString = offficeScanStatus;
+                            if (isToday2 == 0) {
+                                officeTodayUnScanedNum++;
+                            }
+                        }
+                        if (warehouseStatus == 'true') {
+                            warehouseScanedNum++;
+                            warehouseStatus = 'Scanned';
+                            var warehouseScanTime = data[i].warehouseScanTime;
+                            var warehouseScanner = data[i].warehouseScanner;
+                            var warehouseScanHtmlString = warehouseStatus + "<br>" + warehouseScanner + "<br>" + warehouseScanTime;
+                        } else {
+                            warehouseUnScanedNum++;
+                            warehouseStatus = "<span style='background-color:red;color:white'>Not Scanned Yet</span>";
+                            var warehouseScanHtmlString = warehouseStatus;
+                            if (isToday2 == 0) {
+                                warehouseTodayUnScanedNum++;
+                            }
+                        }
+
+
+
+                        if (ShipClass.indexOf("PRIME") >= 0) {
+
+                            var date = new Date();
+                            var hours = date.getHours();
+                            var minutes = date.getMinutes();
+                            if (hours >= 15) {
+                                var ShippingHtmlString = "<span style='background-color:red;color:white'>" + ShipClass + "</span><br>" + ShipDate + "<br>" + ShipMethod;
+                            } else {
+                                var ShippingHtmlString = "<span style='background-color:blue;color:white'>" + ShipClass + "</span><br>" + ShipDate + "<br>" + ShipMethod;
+                            }
+
+                        } else {
+                            var ShippingHtmlString = ShipClass + "<br>" + ShipDate + "<br>" + ShipMethod;
+                        }
+
+
+                        var OrderHtmlString = TxnId + "<br>" + Description + "<br>" + Name + "<br>" + StoreType;
+
+
+                        var PaymentHtmlString = PaymentDate + "<br>" + Buyer_Email + "<br>" + Amount + " " + PaymentStatus;
+                        if (Buyer_Street2 != '') {
+                            var BuyerHtmlString = Buyer_Name + "<br>" + Buyer_Street + "<br>" + Buyer_Street2 + "<br>" + Buyer_State + "<br>" + Buyer_City + Buyer_ZipCode + "<br>" + Buyer_PhoneNumber;
+                        } else
+
+                        {
+                            var BuyerHtmlString = Buyer_Name + "<br>" + Buyer_Street + "<br>" + Buyer_State + "<br>" + Buyer_City + Buyer_ZipCode + "<br>" + Buyer_PhoneNumber;
+                        }
+
+                        if (isToday2 == 0) {
+                            if (offficeScanStatus2 == 'true' && warehouseStatus2 == 'true') {
+
+
+                            } else {
+                                todayUnScanedNum++;
+                                TempObj.Order = OrderHtmlString;
+                                TempObj.Payment = PaymentHtmlString;
+                                TempObj.Buyer = BuyerHtmlString;
+                                TempObj.Shipping = ShippingHtmlString;
+                                TempObj.Tracking = TrackingHtmlString;
+
+                                TempObj.Office = offficeScanHtmlString;
+                                TempObj.Warehouse = warehouseScanHtmlString;
+
+                                TempObj.isToday = isToday2;
+
+                                displayArr.push(TempObj);
+
+                            }
+                        } else if (isToday2 >= 1) {
+                            NoMovingOrderNum++;
+                            TempObj.Order = OrderHtmlString;
+                            TempObj.Payment = PaymentHtmlString;
+                            TempObj.Buyer = BuyerHtmlString;
+                            TempObj.Shipping = ShippingHtmlString;
+                            TempObj.Tracking = TrackingHtmlString;
+
+                            TempObj.Office = offficeScanHtmlString;
+                            TempObj.Warehouse = warehouseScanHtmlString;
+
+                            TempObj.isToday = isToday2;
+
+                            displayArr.push(TempObj);
+
+                        }
+                    }
+
+                    $("#spOSNum").text(officeUnScanedNum);
+                    $("#spWSNum").text(warehouseUnScanedNum);
+                    $("#spTodayOSNum").text(officeTodayUnScanedNum);
+                    $("#spTodayWSNum").text(warehouseTodayUnScanedNum);
+                    $("#spTodayTotalNum").text(todayUnScanedNum);
+                    $("#spnmNum").text(NoMovingOrderNum);
+                    var getNum = displayArr.length;
+                    $("#spNum").text(getNum);
+                    var new_displayArr = NoShipped_data.concat(displayArr);
+                    return new_displayArr;
+
+                }
+
+                function displayToTable(data) {
+                    // loadingLayer();
+                    $("#contain").empty();
+                    $("#contain").append(" <table width='100%' id='myTable1'></table>");
+                    $("#contain").append(" <table width='100%' id='myTable2'></table>");
+
+					
+                    var table = $('#myTable1').DataTable({
+                        scrollY:        200,
+						scrollCollapse: true,
+						paging:         false,
+						data: data,
+                        "columns": [{
+                                "title": "Order",
+                                "data": "Order",
+                                 
+                            },
+                            {
+                                "title": "Payment",
+                                "data": "Payment",
+                                
+
+                            },
+
+                            {
+                                "title": "Buyer",
+                                "data": "Buyer",
+                                
+
+                            }, {
+                                "title": "Shipping",
+                                "data": "Shipping",
+                               
+                            }, {
+                                "title": "Tracking",
+                                "data": "Tracking",
+                                 
+                            }, {
+                                "title": "Office",
+                                "data": "Office",
+                                "width": "150px",
+
+                            },
+                            {
+                                "title": "Warehouse",
+                                "data": "Warehouse",
+                                "width": "100px",
+
+                            },
+                            {
+                                "title": "",
+                                "data": "isToday",
+                                "width": "70px",
+                                "visible": false
+
+
+                            },
+
+                        ],
+
+                        "order": [
+                            [7, "asc"]
+                        ],
+                        "fnRowCallback": function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+
+
+                            if (aData['isToday'] == 0) {
+
+                            } else if (aData['isToday'] == 1) {
+                                $('td', nRow).css('background-color', 'Orange');
+                                //$('td', nRow).css('background-color', 'Red');
+                            } else if (aData['isToday'] == 2) {
+                                $('td', nRow).css('background-color', '#E76D6F');
+                                //$('td', nRow).css('background-color', 'Red');
+                            } else if (aData['isToday'] > 2) {
+                                $('td', nRow).css('background-color', 'Red');
+                                //$('td', nRow).css('background-color', 'Red');
+                            } else if (aData['isToday'] = -1) {
+                                $('td', nRow).css('background-color', '#E4E9C9');
+                                //$('td', nRow).css('background-color', 'Red');
+                            }
+                        }
+
+                    });
+					 // Apply a search to the second table for the demo
+					$('#myTable2').DataTable().search( 'Value' ).draw();
+
+                }
+
+                function today() {
+
+                    var today = new Date();
+                    var dd = today.getDate();
+                    var mm = today.getMonth() + 1; //January is 0!
+
+                    var yyyy = today.getFullYear();
+                    if (dd < 10) {
+                        dd = '0' + dd;
+                    }
+                    if (mm < 10) {
+                        mm = '0' + mm;
+                    }
+                    var today = mm + '/' + dd + '/' + yyyy;
+
+                    formatAMPM(today)
+                }
+
+                function formatAMPM(today) {
+                    var date = new Date();
+                    var hours = date.getHours();
+                    var minutes = date.getMinutes();
+                    var ampm = hours >= 12 ? 'pm' : 'am';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12; // the hour '0' should be '12'
+                    minutes = minutes < 10 ? '0' + minutes : minutes;
+                    var strTime = hours + ':' + minutes + ' ' + ampm;
+                    // $("#spTime").text(today + ' : ' + strTime);
+                }
+                var layerIndex;
+
+                function loadingLayer() {
+                    layerIndex = layer.load(1, {
+                        shade: [0.3, '#fff']
+                    });
+
+                }
+
+                function checkItToday(ShipDate) {
+                    var ShipDate = new Date(ShipDate);
+                    var dd = ShipDate.getDate();
+                    var mm = ShipDate.getMonth() + 1; //January is 0!
+
+                    var yyyy = ShipDate.getFullYear();
+                    if (dd < 10) {
+                        dd = '0' + dd;
+                    }
+                    if (mm < 10) {
+                        mm = '0' + mm;
+                    }
+                    var ShipDate = mm + '/' + dd + '/' + yyyy;
+                    var today = new Date();
+
+                    var today_dd = today.getDate();
+                    var today_mm = today.getMonth() + 1; //January is 0!
+
+                    var today_yyyy = today.getFullYear();
+                    if (today_dd < 10) {
+                        today_dd = '0' + dd;
+                    }
+                    if (today_mm < 10) {
+                        today_mm = '0' + today_mm;
+                    }
+                    var ShipDate = mm + '/' + dd + '/' + yyyy;
+                    var today = today_mm + '/' + today_dd + '/' + today_yyyy;
+                    if (Date.parse(today) == Date.parse(ShipDate)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+
+                }
+
+
+
+
+                function calcDate(ShipDate) {
+                    ShipDate = ShipDate.split(' ')[0];
+
+                    var passed = new Date(ShipDate);
+                    var today = new Date();
+
+                    var diff = Math.floor(today.getTime() - passed.getTime());
+                    var hour = 1000 * 60 * 60;
+                    var day = 1000 * 60 * 60 * 24;
+
+                    var hours = Math.floor(diff / hour);
+                    var days = Math.floor(diff / day);
+                    var months = Math.floor(days / 31);
+                    var years = Math.floor(months / 12);
+
+                    /*var message = os_date;
+                    message += " was "
+                    message += hours + " hours "
+                    message += days + " days " 
+                    message += months + " months "
+                    message += years + " years ago \n"
+                    */
+
+                    console.log(days);
+
+                    return days
+                }
+            </script>
+</body>
+
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+
+<head>
+    <title>No shipped Orders</title>
+
+</head>
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+
+
+
+<style>
+    table {
+
+        font-size: 14px;
+
+    }
+</style>
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+
+<body>
+    <div><span id='spTime'></span> Total No shipped orders: <span id='spNum'></span>
+        <div>
+            <table width="100%" class="display" align="center" id='mainTable'>
+
+            </table>
+            <script>
+		
+
+                var ajax_call = function() {
+                    $.ajax({
+                        url: 'teapplix_NotShipped_api.php',
+                        type: 'post',
+
+                        success: function(output) {
+
+                            listArr = jQuery.parseJSON(output);
+                            if (listArr.status == 'noshiped_done') {
+                                getNoShippedOrders();
+                            }
+
+
+
+                        }
+                    });
+                };
+
+                var interval = 1000 * 60 * 60; // where X is your every X minutes
+                //ajax_call();
+                setInterval(ajax_call, interval);
+                //getNoShippedOrders();
+
+
+                function getNoShippedOrders() {
+                    $.ajax({
+                        url: 'notshipped_orders.php',
+                        type: 'post',
+
+                        success: function(output) {
+                            listArr = jQuery.parseJSON(output);
+                            var newArr = formatData(listArr);
+                            displayToTable(newArr)
+                            var Num = listArr.length;
+                            $("#spNum").text(Num);
+                            today();
+
+
+                        }
+                    });
+
+
+                }
+
+                function formatData(data) {
+                    var displayArr = [];
+                    for (var i in data) {
+                        var TempObj = {};
+                        var TxnId = data[i].TxnId;
+                        var StoreType = data[i].StoreType;
+
+                        var PaymentDate = data[i].PaymentDate;
+                        var PaymentStatus = data[i].PaymentStatus;
+
+                        var OrderItems = jQuery.parseJSON(data[i].OrderItems);
+
+                        var Description = OrderItems[0].Description;
+                        var Name = OrderItems[0].Name;
+
+
+                        var Quantity = OrderItems[0].Quantity;
+                        var Amount = OrderItems[0].Amount;
+                        var Buyer = jQuery.parseJSON(data[i].ToJson);
+                        var Buyer_Name = Buyer.Name;
+                        var Buyer_Street = Buyer.Street;
+                        var Buyer_Street2 = Buyer.Street2;
+                        var Buyer_State = Buyer.State;
+                        var Buyer_City = Buyer.City;
+                        var Buyer_PhoneNumber = Buyer.PhoneNumber;
+                        var Buyer_Email = Buyer.Email;
+                        var Buyer_ZipCode = Buyer.ZipCode;
+                        var OrderHtmlString = TxnId + "<br>" + Description + "<br>" + Name + "<br>" + StoreType;
+                        var PaymentHtmlString = PaymentDate + "<br>" + Buyer_Email + "<br>" + Amount + " " + PaymentStatus;
+                        if (Buyer_Street2 != '') {
+                            var BuyerHtmlString = Buyer_Name + "<br>" + Buyer_Street + "<br>" + Buyer_Street2 + "<br>" + Buyer_State + "<br>" + Buyer_City + Buyer_ZipCode + "<br>" + Buyer_PhoneNumber;
+                        } else
+
+                        {
+                            var BuyerHtmlString = Buyer_Name + "<br>" + Buyer_Street + "<br>" + Buyer_State + "<br>" + Buyer_City + Buyer_ZipCode + "<br>" + Buyer_PhoneNumber;
+                        }
+
+                        TempObj.Order = OrderHtmlString;
+                        TempObj.Payment = PaymentHtmlString;
+                        TempObj.Buyer = BuyerHtmlString;
+                        displayArr.push(TempObj);
+
+                    }
+                    return displayArr;
+
+
+                }
+
+                function displayToTable(data) {
+                    // loadingLayer();
+
+                    var table = $('#mainTable').DataTable({
+                        scrollY: 1000,
+                        searching: false,
+                        scrollCollapse: true,
+                        paging: true,
+                        info: false,
+                        "bPaginate": false,
+                        "bLengthChange": false,
+                        "bFilter": true,
+                        "bInfo": false,
+                        "bAutoWidth": false,
+                        "pageLength": 8,
+
+                        data: data,
+
+                        "columns": [{
+                                "title": "Order",
+                                "data": "Order"
+                            },
+                            {
+                                "title": "Payment",
+                                "data": "Payment"
+                            },
+
+                            {
+                                "title": "Buyer",
+                                "data": "Buyer"
+
+                            },
+
+                        ],
+
+
+
+                    });
+					   
+							setInterval(function(){ 
+							   var info = table.page.info();
+							   var pageNum = (info.page < info.pages) ? info.page + 1 : 1;
+							   table.page(pageNum).draw(false);    
+							}, 10000); 
+						
+
+                }
+
+                function today() {
+
+                    var today = new Date();
+                    var dd = today.getDate();
+                    var mm = today.getMonth() + 1; //January is 0!
+
+                    var yyyy = today.getFullYear();
+                    if (dd < 10) {
+                        dd = '0' + dd;
+                    }
+                    if (mm < 10) {
+                        mm = '0' + mm;
+                    }
+                    var today = mm + '/' + dd + '/' + yyyy;
+
+                    formatAMPM(today)
+                }
+
+                function formatAMPM(today) {
+                    var date = new Date();
+                    var hours = date.getHours();
+                    var minutes = date.getMinutes();
+                    var ampm = hours >= 12 ? 'pm' : 'am';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12; // the hour '0' should be '12'
+                    minutes = minutes < 10 ? '0' + minutes : minutes;
+                    var strTime = hours + ':' + minutes + ' ' + ampm;
+                    $("#spTime").text(today + ' : ' + strTime);
+                }
+                var layerIndex;
+
+                function loadingLayer() {
+                    layerIndex = layer.load(1, {
+                        shade: [0.3, '#fff']
+                    });
+
+                }
+            </script>
+</body>
+
+</html>

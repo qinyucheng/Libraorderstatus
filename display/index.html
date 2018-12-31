@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+
+<head>
+    <title>No shipped Orders</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div><span id='spTime'></span> Total No shipped orders: <span id='spNum'></span>
+        <div>
+            <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center">
+                <tr>
+                    <td width=200 height=752>
+                        <div class="RPR-P1">
+                            <div class="RPR-P1-R2">
+                                <div id="demo" style="overflow: hidden; width: 100%; height:652px; color:white; margin:0px;line-height:22px;">
+                                    <div id="demo1">
+
+                                    </div>
+                                    <div id="demo2">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <script>
+               var ajax_call = function() {
+				   $.ajax({
+                        url: 'teapplix_NotShipped_api.php',
+                        type: 'post',
+
+                        success: function(output) {
+                            
+							 listArr = jQuery.parseJSON(output);
+							if(listArr.status=='noshiped_done')
+							{
+							getNoShippedOrders();
+							}
+							
+
+
+                        }
+                    });
+				};
+
+				var interval = 1000 * 60 * 60; // where X is your every X minutes
+				ajax_call();
+				setInterval(ajax_call, interval);
+				//getNoShippedOrders();
+
+
+                function getNoShippedOrders() {
+                    $.ajax({
+                        url: 'notshipped_orders.php',
+                        type: 'post',
+
+                        success: function(output) {
+                            listArr = jQuery.parseJSON(output);
+                            formatData(listArr);
+                            var Num = listArr.length;
+                            $("#spNum").text(Num);
+                            today();
+
+
+                        }
+                    });
+
+
+                }
+
+                function formatData(data) {
+                    for (var i in data) {
+                        var TxnId = data[i].TxnId;
+                        var StoreType = data[i].StoreType;
+
+                        var OrderItems = jQuery.parseJSON(data[i].OrderItems);
+                        var Description = OrderItems[0].Description;
+                        var Name = OrderItems[0].Name;
+                        var Quantity = OrderItems[0].Quantity;
+                        var string = ' OrderID:' + TxnId;
+                        string += ' Store:' + StoreType;
+                        string += '  Name:' + Name;
+                        string += '  Quantity:' + Quantity;
+                        string += '  Description:' + Description;
+                        console.log(string);
+                        var aTag = '<a href="" style="text-decoration:none">' + (parseInt(i) + 1) + ": " + string + '</a><br><br>'
+
+                        $("#demo1").append(aTag);
+                    }
+
+                    display();
+                }
+
+                function display() {
+                    var speed = 50
+                    var _demo = document.getElementById("demo");
+                    var _demo1 = document.getElementById("demo1");
+                    var _demo2 = document.getElementById("demo2");
+                    demo2.innerHTML = demo1.innerHTML
+
+                    function Marquee() {
+                        if (_demo2.offsetTop - _demo.scrollTop <= 0) {
+                            _demo.scrollTop -= _demo1.offsetHeight
+                        } else {
+                            _demo.scrollTop++
+                        }
+                    }
+                    var MyMar = setInterval(Marquee, speed)
+                    //_demo.onmouseover=function() {clearInterval(MyMar)}  
+                    //_demo.onmouseout=function() {MyMar=setInterval(Marquee,speed)}  
+
+
+
+                }
+
+                function today() {
+
+                    var today = new Date();
+                    var dd = today.getDate();
+                    var mm = today.getMonth() + 1; //January is 0!
+
+                    var yyyy = today.getFullYear();
+                    if (dd < 10) {
+                        dd = '0' + dd;
+                    }
+                    if (mm < 10) {
+                        mm = '0' + mm;
+                    }
+                    var today = mm + '/' + dd + '/' + yyyy;
+
+                    formatAMPM(today)
+                }
+
+                function formatAMPM(today) {
+                    var date = new Date();
+                    var hours = date.getHours();
+                    var minutes = date.getMinutes();
+                    var ampm = hours >= 12 ? 'pm' : 'am';
+                    hours = hours % 12;
+                    hours = hours ? hours : 12; // the hour '0' should be '12'
+                    minutes = minutes < 10 ? '0' + minutes : minutes;
+                    var strTime = hours + ':' + minutes + ' ' + ampm;
+                    $("#spTime").text(today + ' : ' + strTime);
+                }
+            </script>
+</body>
+
+</html>

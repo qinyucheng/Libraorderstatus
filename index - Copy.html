@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+abc()
+    $("button").click(function(){
+        $("#div1").load("demo_test.txt");
+    });
+});
+
+function abc()
+{
+ method = "GET";
+        Url = 'https://api.teapplix.com/api2/Track?Carrier=FEDEX&TrackingNumber=784199909322';
+        content = { APIToken: '99333-cfbb3-9f3d0-beca9-f674e-90320-6081' };
+        $.ajax({
+
+            url: Url,
+            type: method,
+            data: content,
+
+        }).success(function (data) {
+           var ab=data;
+
+        });
+
+
+
+
+
+}
+</script>
+</head>
+<body>
+
+<div id="div1"><h2>Let jQuery AJAX Change This Text</h2></div>
+
+<button>Get External Content</button>
+
+</body>
+</html>

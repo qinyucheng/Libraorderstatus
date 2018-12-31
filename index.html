@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">  
+<html>  
+<head>  
+<title>不间断上下循环滚动的公告栏效果</title>  
+</head>  
+<body>  
+    <table width="100%" border="0" cellpadding="0" cellspacing="0">  
+        <tr>  
+          <td width=200 height=752>  
+            <div class="RPR-P1">  
+                <div class="RPR-P1-R2">  
+                    <div id="demo" style="overflow: hidden; width: 100%; height:652px; color:white; margin:0px;line-height:22px;">  
+                        <div id="demo1">  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">1</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">2</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">3</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">4</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">5</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">6</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">7</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">8</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">9</a><br>  
+							·<a href="javascript:alert('')" style="text-decoration:none">10</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">11</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">12</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">13</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">14</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">15</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">16</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">17</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">18</a><br>  
+							·<a href="javascript:alert('')" style="text-decoration:none">19</a><br>  
+							·<a href="javascript:alert('')" style="text-decoration:none">20</a><br>  
+							·<a href="javascript:alert('')" style="text-decoration:none">30</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">31</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">32</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">33</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">34</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">35</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">36</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">37</a><br>  
+                            ·<a href="javascript:alert('')" style="text-decoration:none">38</a><br>  
+							·<a href="javascript:alert('')" style="text-decoration:none">39</a><br>  
+							·<a href="javascript:alert('')" style="text-decoration:none">30</a><br>  
+                        </div>  
+                        <div id="demo2">  
+						 
+                        </div>  
+                    </div>  
+                </div>  
+            </div>  
+          </td>  
+        </tr>  
+    </table>  
+<script>  
+     var speed = 50  
+     var _demo = document.getElementById("demo");  
+     var _demo1 = document.getElementById("demo1");  
+     var _demo2 = document.getElementById("demo2");  
+     demo2.innerHTML=demo1.innerHTML  
+     function Marquee(){  
+      if(_demo2.offsetTop-_demo.scrollTop<=0){  
+       _demo.scrollTop-=_demo1.offsetHeight  
+      }else{  
+       _demo.scrollTop++  
+      }  
+     }  
+     var MyMar=setInterval(Marquee,speed)  
+     //_demo.onmouseover=function() {clearInterval(MyMar)}  
+     //_demo.onmouseout=function() {MyMar=setInterval(Marquee,speed)}  
+	 
+	 
+	
+	
+</script>  
+</body>  
+</html> 

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" >
+
+<head>
+  <meta charset="UTF-8">
+  <title>Highcharts Sample</title>
+  
+  
+  
+  
+  
+</head>
+
+<body>
+
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script
+  src="https://code.jquery.com/jquery-1.12.4.js"
+  integrity="sha256-Qw82+bXyGq6MydymqBxNPYTaUXXq7c8v3CwiYwLLNXU="
+  crossorigin="anonymous"></script>
+<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+
+	<script>
+	$( document ).ready(function() {
+		getData()
+	});
+	
+	 function getData() {
+
+		$.ajax({
+			url: 'tracking.php',
+
+			type: 'Post',
+			success: function(output) {
+			console.log(output);
+			  //var data = jQuery.parseJSON(output);
+			
+			}
+		});
+
+	}
+	
+	
+	
+	</script>
+
+
+
+
+</body>
+
+</html>
